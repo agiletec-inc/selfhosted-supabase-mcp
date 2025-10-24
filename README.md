@@ -252,9 +252,24 @@ Consult the specific documentation for each client on where to place the `mcp.js
 ## Development
 
 *   **Language:** TypeScript
-*   **Build:** `tsc` (TypeScript Compiler)
-*   **Dependencies:** Managed via `npm` (`package.json`)
-*   **Core Libraries:** `@supabase/supabase-js`, `pg` (node-postgres), `zod` (validation), `commander` (CLI args), `@modelcontextprotocol/sdk` (MCP server framework).
+*   **Build:** `tsup` (bundled via npm scripts)
+*   **Type checking:** `npm run typecheck` (invokes `tsc --noEmit`)
+*   **Testing:** `npm test` (Node test runner with TypeScript loader)
+*   **Dependencies:** Managed via `npm`
+*   **Core Libraries:** `@supabase/supabase-js`, `pg`, `zod`, `commander`, `@modelcontextprotocol/sdk`
+
+## Testing & Continuous Integration
+
+*   Run `npm test` locally before opening a PR; the command runs type-checking and the security/unit test suite located in `test/`.
+*   GitHub Actions workflow `.github/workflows/ci.yml` executes `npm ci`, `npm run typecheck`, `npm run build`, and `npm test` on every push and pull request.
+*   Tests do not spin up Supabase; they focus on authentication, RBAC, and credential masking logic. Extend them with integration checks if you connect to a staging instance.
+*   A load and failure testing checklist lives in `docs/testing-strategy.md`. Use it to validate releases against production workloads.
+
+## Operations
+
+*   Follow the production checklist in `docs/operations.md` for secret management, audit logging, and deployment sequencing.
+*   Use `--tools-config` to whitelist tools per environment, especially when exposing `execute_sql` or Auth write operations.
+*   Keep Supabase keys out of version control; rotate them alongside `SUPABASE_AUTH_JWT_SECRET` and clear active sessions after rotation.
 
 ## License
 
