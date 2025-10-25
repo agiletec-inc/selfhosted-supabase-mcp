@@ -1,0 +1,43 @@
+services:
+  workspace:
+    image: node:20-alpine
+    container_name: ${COMPOSE_PROJECT_NAME:-selfhosted-supabase-mcp}-workspace
+    working_dir: /workspace
+    volumes:
+      # Source code (bidirectional sync)
+      - ./src:/workspace/src:delegated
+      - ./package.json:/workspace/package.json:ro
+      - ./tsconfig.json:/workspace/tsconfig.json:ro
+
+      # Build output (container → host, for distribution)
+      - ./dist:/workspace/dist:delegated
+
+      # Dependencies (container-only, Mac pollution prevention)
+      - node_modules:/workspace/node_modules
+
+      # pnpm cache (container-only, persistent across rebuilds)
+      - pnpm_store:/root/.local/share/pnpm/store
+
+    environment:
+      - NODE_ENV=development
+      - PNPM_HOME=/root/.local/share/pnpm
+
+    command: tail -f /dev/null  # Keep container running
+
+    # Install pnpm on container startup
+    entrypoint: >
+      sh -c "
+        if ! command -v pnpm >/dev/null 2>&1; then
+          echo '📦 Installing pnpm...';
+          npm install -g pnpm;
+        fi;
+        exec tail -f /dev/null
+      "
+
+volumes:
+  # Named volumes for dependencies (Mac pollution prevention)
+  node_modules:
+    name: ${COMPOSE_PROJECT_NAME:-selfhosted-supabase-mcp}-node_modules
+
+  pnpm_store:
+    name: ${COMPOSE_PROJECT_NAME:-selfhosted-supabase-mcp}-pnpm_store
